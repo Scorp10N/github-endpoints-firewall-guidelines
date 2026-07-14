@@ -86,3 +86,28 @@ gh api /meta --jq '
   | "\($k)\t\(.)"
 ' > github-ip-cidrs.tsv
 ```
+
+## Unified feed strategy by platform
+
+| Platform | Native dynamic object/feed | Can point at self-hosted list | Best fit |
+|---|---|---|---|
+| Check Point | Yes — External Network Feed | Yes | One HTTPS feed can contain IPs, domains, or both |
+| FortiGate | Yes — IP Address External Feed | Yes for IPs; FQDN objects for domains | Split into `ips.txt` feed plus FQDN address objects |
+| Forcepoint Web Gateway | Partial — custom URL/category constructs | Yes, via URL/category import or sync | Use custom URL lists or categories, not one universal feed object |
+| Ericom RBI | No public feed-object doc found | Likely via policy/API sync | Maintain allowlists in a central source and push into policy |
+| Island | No public feed-object doc found | Likely via policy/API sync | Manage URL lists/policies centrally and sync from source of truth |
+
+## Recommended architecture
+
+Use one self-hosted source of truth and publish platform-specific outputs from it:
+
+- `ips.txt` for feed-based IP consumers
+- `domains.txt` for FQDN or URL-list consumers
+- `github-services.json` if you want a single canonical API payload
+
+Then map each product to the format it supports:
+
+- Check Point: one external network feed for IPs + domains
+- FortiGate: external IP feed for IPs, FQDN objects for domains
+- Forcepoint: URL/category list import or API-driven sync
+- Ericom / Island: policy/API sync from the same source data
